@@ -42,6 +42,13 @@ public class DefaultJudgeStrategy implements JudgeStrategy
         judgeInfoResult.setMemory(memory);
         judgeInfoResult.setTime(time);
 
+        if (!JudgeInfoMessageEnum.ACCEPTED.getText().equals(judgeInfo.getMessage())
+                && !JudgeInfoMessageEnum.ACCEPTED.getValue().equals(judgeInfo.getMessage())
+                && !"代码运行成功".equals(judgeInfo.getMessage())) {
+            judgeInfoResult.setMessage(judgeInfo.getMessage());
+            return judgeInfoResult;
+        }
+
         // 判断输出是否与测试输出用例一致
         if(outputList.size() != inputList.size()){;
             judgeInfoResult.setMessage(JudgeInfoMessageEnum.WRONG_ANSWER.getValue());
@@ -60,12 +67,14 @@ public class DefaultJudgeStrategy implements JudgeStrategy
         String judgeConfig = question.getJudgeConfig();
         JudgeConfig questionJudgeConfig = JSONUtil.toBean(judgeConfig, JudgeConfig.class);
         // 是否超出内存限制
-        if(memory > questionJudgeConfig.getMemoryLimit()){
+        if(questionJudgeConfig != null && questionJudgeConfig.getMemoryLimit() != null
+                && memory > questionJudgeConfig.getMemoryLimit()){
             judgeInfoResult.setMessage(JudgeInfoMessageEnum.MEMORY_LIMIT_EXCEEDED.getValue());
             return judgeInfoResult;
         }
         // 是否超出时间限制
-        if(time > questionJudgeConfig.getTimeLimit()){
+        if(questionJudgeConfig != null && questionJudgeConfig.getTimeLimit() != null
+                && time > questionJudgeConfig.getTimeLimit()){
             judgeInfoResult.setMessage(JudgeInfoMessageEnum.TIME_LIMIT_EXCEEDED.getValue());
             return judgeInfoResult;
         }

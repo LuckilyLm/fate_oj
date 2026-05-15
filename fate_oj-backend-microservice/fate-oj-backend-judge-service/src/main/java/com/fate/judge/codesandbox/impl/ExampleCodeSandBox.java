@@ -22,16 +22,22 @@ public class ExampleCodeSandBox implements CodeSandBox
 {
     private static final String AUTH_REQUEST_HEADER = "auth";
 
-    private static final String AUTH_REQUEST_SECRET = "fate";
+    private final String codeSandBoxUrl;
+
+    private final String authSecret;
+
+    public ExampleCodeSandBox(String codeSandBoxUrl, String authSecret) {
+        this.codeSandBoxUrl = StringUtils.removeEnd(codeSandBoxUrl, "/");
+        this.authSecret = authSecret;
+    }
 
     @Override
     public ExecuteResponse executeCode(ExecuteRequest executeRequest) {
         log.info("---调用原生代码沙箱执行代码---");
-        // String url = "http://localhost:8090/executeCode";
-        String url = "http://192.168.211.130:8090/executeCode/native";
+        String url = codeSandBoxUrl + "/executeCode/native";
         String json = JSONUtil.toJsonStr(executeRequest);
         String responseStr = HttpUtil.createPost(url)
-                .header(AUTH_REQUEST_HEADER, AUTH_REQUEST_SECRET)
+                .header(AUTH_REQUEST_HEADER, authSecret)
                 .body(json)
                 .execute()
                 .body();

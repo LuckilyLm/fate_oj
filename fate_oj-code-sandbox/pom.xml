@@ -31,21 +31,6 @@
             <artifactId>spring-boot-devtools</artifactId>
         </dependency>
 
-        <!-- java操作docker的依赖 -->
-        <dependency>
-            <groupId>com.github.docker-java</groupId>
-            <artifactId>docker-java</artifactId>
-            <version>3.3.0</version>
-        </dependency>
-
-        <!-- java操作docker的依赖 -->
-        <dependency>
-            <groupId>com.github.docker-java</groupId>
-            <artifactId>docker-java-transport-httpclient5</artifactId>
-            <version>3.3.0</version>
-        </dependency>
-
-
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>

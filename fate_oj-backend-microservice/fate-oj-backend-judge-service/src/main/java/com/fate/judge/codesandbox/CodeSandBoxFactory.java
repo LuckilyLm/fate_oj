@@ -17,14 +17,14 @@ public class CodeSandBoxFactory
      * @param type 代码沙箱类型
      * @return 代码沙箱实例
      */
-    public static CodeSandBox newInstance(String type){
+    public static CodeSandBox newInstance(String type, String codeSandBoxUrl, String authSecret){
          switch (type) {
             case "remote" :
-                return new RemoteCodeSandBox();
+                return new RemoteCodeSandBox(codeSandBoxUrl, authSecret);
             case "thirdParty" :
-                return new ThirdPartyCodeSandBox();
+                return new ThirdPartyCodeSandBox(codeSandBoxUrl, authSecret);
             default :
-                return new ExampleCodeSandBox();
+                return new ExampleCodeSandBox(codeSandBoxUrl, authSecret);
         }
     }
 }

@@ -1,9 +1,16 @@
 server:
   port: 8090
 
-# JDoodle API credentials
-# https://www.jdoodle.com/
-# TODO 更换为自己的密钥
-jdoodle:
-  clientId: your_client_id
-  clientSecret: your_client_secret
+sandbox:
+  auth-header: auth
+  auth-secret: fate
+  work-dir: tmpCode
+  default-time-limit: 3000
+  default-memory-limit: 262144
+  default-stack-limit: 65536
+  compile-time-limit: 10000
+  compile-memory-limit: 524288
+  wall-time-extra: 1000
+  max-output-bytes: 1048576
+  max-processes: 32
+  max-file-size: 65536

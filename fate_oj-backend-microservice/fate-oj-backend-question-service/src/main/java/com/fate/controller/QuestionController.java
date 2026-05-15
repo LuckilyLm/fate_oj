@@ -1,7 +1,6 @@
 package com.fate.controller;
 
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fate.annotation.AuthCheck;
 import com.fate.common.BaseResponse;
@@ -93,10 +92,7 @@ public class QuestionController {
             result = questionService.save(question);
         }
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-        // 获取创建题目id
-        Question addQuestion = questionService.getOne(new QueryWrapper<>(question).eq(
-                "userId", loginUser.getId() ));
-        return ResultUtils.success(addQuestion.getId());
+        return ResultUtils.success(question.getId());
     }
 
     /**
@@ -190,8 +186,12 @@ public class QuestionController {
     @PostMapping("/list/page")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Page<Question>> listQuestionByPage(@RequestBody QuestionQueryRequest questionQueryRequest) {
+        if (questionQueryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
         long current = questionQueryRequest.getCurrent();
         long size = questionQueryRequest.getPageSize();
+        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
         Page<Question> questionPage = questionService.page(new Page<>(current, size),
                 questionService.getQueryWrapper(questionQueryRequest));
         return ResultUtils.success(questionPage);
@@ -206,6 +206,9 @@ public class QuestionController {
     @PostMapping("/list/page/vo")
     public BaseResponse<Page<QuestionVO>> listQuestionVOByPage(@RequestBody QuestionQueryRequest questionQueryRequest,
             HttpServletRequest request) {
+        if (questionQueryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
         long current = questionQueryRequest.getCurrent();
         long size = questionQueryRequest.getPageSize();
         // 限制爬虫
@@ -289,7 +292,8 @@ public class QuestionController {
     @RequestMapping("/question_submit/do")
     public BaseResponse<Long> doQuestionSubmit(@RequestBody QuestionSubmitAddRequest questionSubmitAddRequest,
                                                HttpServletRequest request) {
-        if(questionSubmitAddRequest == null || questionSubmitAddRequest.getQuestionId() <= 0 ){
+        if(questionSubmitAddRequest == null || questionSubmitAddRequest.getQuestionId() == null
+                || questionSubmitAddRequest.getQuestionId() <= 0 ){
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
         final User loginUser = userFeinClient.getLoginUser(request);
@@ -306,8 +310,12 @@ public class QuestionController {
     @PostMapping("/question_submit/list/page")
     public BaseResponse<Page<QuestionSubmitVO>> listQuestionSubmitByPage(@RequestBody QuestionSubmitQueryRequest questionSubmitQueryRequest,
                                                                          HttpServletRequest request) {
+        if (questionSubmitQueryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
         long current = questionSubmitQueryRequest.getCurrent();
         long size = questionSubmitQueryRequest.getPageSize();
+        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
         final User loginUser = userFeinClient.getLoginUser(request);
         // 获取原始的题目提交信息
         Page<QuestionSubmit> questionSubmitPage = questionSubmitService.page(new Page<>(current, size),

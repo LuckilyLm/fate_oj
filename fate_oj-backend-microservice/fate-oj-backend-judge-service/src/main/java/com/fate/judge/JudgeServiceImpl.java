@@ -10,6 +10,7 @@ import com.fate.judge.codesandbox.CodeSandBoxProxy;
 import com.fate.judge.strategy.JudgeContext;
 import com.fate.model.codesandbox.ExecuteRequest;
 import com.fate.model.codesandbox.ExecuteResponse;
+import com.fate.model.dto.question.JudgeConfig;
 import com.fate.model.dto.question.JudgeCase;
 import com.fate.model.dto.questionsubmit.JudgeInfo;
 import com.fate.model.entity.Question;
@@ -35,6 +36,12 @@ public class JudgeServiceImpl implements JudgeService {
 
     @Value("${codesandbox.type}")
     private String codeSandBoxType;
+
+    @Value("${codesandbox.url:http://localhost:8090}")
+    private String codeSandBoxUrl;
+
+    @Value("${codesandbox.auth-secret:fate}")
+    private String codeSandBoxAuthSecret;
 
     @Resource
     private JudgeManager judgeManager;
@@ -66,7 +73,7 @@ public class JudgeServiceImpl implements JudgeService {
 
 
         // 4. 调用沙箱接口执行代码, 获取执行结果
-        CodeSandBox codeSandBox = CodeSandBoxFactory.newInstance(codeSandBoxType);
+        CodeSandBox codeSandBox = CodeSandBoxFactory.newInstance(codeSandBoxType, codeSandBoxUrl, codeSandBoxAuthSecret);
         codeSandBox = new CodeSandBoxProxy(codeSandBox);
         // 获取提交的代码和编程语言
         String language = questionSubmit.getLanguage();
@@ -75,11 +82,15 @@ public class JudgeServiceImpl implements JudgeService {
         String judgeCaseStr = question.getJudgeCase();
         List<JudgeCase> judgeCaseList = JSONUtil.toList(judgeCaseStr, JudgeCase.class);
         List<String> inputList = judgeCaseList.stream().map(JudgeCase::getInput).collect(Collectors.toList());
+        JudgeConfig judgeConfig = JSONUtil.toBean(question.getJudgeConfig(), JudgeConfig.class);
 
         ExecuteRequest executeRequest = ExecuteRequest.builder()
                 .code(code)
                 .language(language)
                 .inputList(inputList)
+                .timeLimit(judgeConfig == null ? null : judgeConfig.getTimeLimit())
+                .memoryLimit(judgeConfig == null ? null : judgeConfig.getMemoryLimit())
+                .stackLimit(judgeConfig == null ? null : judgeConfig.getStackLimit())
                 .build();
 
         // 调用沙箱接口执行代码
@@ -109,7 +120,8 @@ public class JudgeServiceImpl implements JudgeService {
         QuestionSubmit questionSubmitFinish = new QuestionSubmit();
         questionSubmitFinish.setId(questionSubmitId);
         // 根据判题结果更新题目提交状态,成功或者失败
-        if(JudgeInfoMessageEnum.ACCEPTED.getValue().equals(judgeInfo.getMessage())){
+        if(JudgeInfoMessageEnum.ACCEPTED.getText().equals(judgeInfo.getMessage())
+                || JudgeInfoMessageEnum.ACCEPTED.getValue().equals(judgeInfo.getMessage())){
             questionSubmitFinish.setStatus(QuestionSubmitStatusEnum.SUCCESS.getValue());
         }else{
             questionSubmitFinish.setStatus(QuestionSubmitStatusEnum.FAILED.getValue());

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fate.common.ErrorCode;
+import com.fate.config.RabbitMqConfig;
 import com.fate.constant.CommonConstant;
 import com.fate.exception.BusinessException;
 import com.fate.feignclient.JudgeFeignClient;
@@ -36,10 +37,6 @@ import java.util.stream.Collectors;
 public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper, QuestionSubmit>
     implements QuestionSubmitService {
 
-    private static final String EXCHANGE_NAME = "code_exchange";
-
-    private static final String ROUTING_KEY = "fate_code";
-
     @Resource
     private QuestionService questionService;
 
@@ -68,6 +65,10 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         if (enumByValue == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"语言类型不存在");
         }
+        if (!QuestionSubmitLanguageEnum.JAVA.getValue().equals(language)
+                && !QuestionSubmitLanguageEnum.CPP.getValue().equals(language)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "暂只支持 Java 和 C++");
+        }
         Long questionId = questionSubmitAddRequest.getQuestionId();
         Question question = questionService.getById(questionId);
         if (question == null) {
@@ -93,7 +94,8 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         Long questionSubmitId = questionSubmit.getId();
 
         // 发送消息到RabbitMQ
-        messageProducer.sendMessage(EXCHANGE_NAME,ROUTING_KEY,String.valueOf(questionSubmitId));
+        messageProducer.sendMessage(RabbitMqConfig.CODE_EXCHANGE, RabbitMqConfig.CODE_ROUTING_KEY,
+                String.valueOf(questionSubmitId));
 
         // 异步判题
         // CompletableFuture.runAsync( () -> {
@@ -135,7 +137,7 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         questionSubmitQueryWrapper.eq("isDelete",false);
 
         // 排序,根据sortField和sortOrder进行排序,sortOrder默认降序
-        questionSubmitQueryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
+        questionSubmitQueryWrapper.orderBy(SqlUtils.validSortField(sortField), CommonConstant.SORT_ORDER_ASC.equals(sortOrder),
                 sortField);
         return questionSubmitQueryWrapper;
     }

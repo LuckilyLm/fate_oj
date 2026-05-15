@@ -1,5 +1,6 @@
 package com.fate.rabbitmq;
 
+import com.fate.config.RabbitMqConfig;
 import com.fate.judge.JudgeService;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +24,7 @@ public class MessageConsumer
 
     @Resource
     private JudgeService judgeService;
-    // TODO 改为自己的队列名
-    @RabbitListener(queues = "code_queue",ackMode = "MANUAL")
+    @RabbitListener(queues = RabbitMqConfig.CODE_QUEUE, ackMode = "MANUAL")
     public void receiveMessage(String message, Channel channel,@Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
         long questionSubmitId = Long.parseLong(message);
         System.err.println(questionSubmitId);
